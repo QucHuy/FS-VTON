@@ -5,7 +5,7 @@ class TrainOptions(BaseOptions):
         BaseOptions.initialize(self)
         # for displays
         self.parser.add_argument('--launcher', choices=['none', 'pytorch'], default='none',help='job launcher')
-        self.parser.add_argument('--local_rank', type=int, default=0)
+        self.parser.add_argument('--local_rank', type=list, default=0)
 
         self.parser.add_argument('--display_freq', type=int, default=100, help='frequency of showing training results on screen')
         self.parser.add_argument('--print_freq', type=int, default=100, help='frequency of showing training results on console')
