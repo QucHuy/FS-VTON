@@ -137,6 +137,8 @@ class Vgg19(nn.Module):
         for x in range(12, 21):
             self.slice4.add_module(str(x), vgg_pretrained_features[x])
         for x in range(21, 30):
+            if isinstance(vgg_pretrained_features[x], nn.MaxPool2d):
+                vgg_pretrained_features[x].ceil_mode = True
             self.slice5.add_module(str(x), vgg_pretrained_features[x])
         if not requires_grad:
             for param in self.parameters():
