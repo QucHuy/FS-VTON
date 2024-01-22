@@ -5,6 +5,7 @@ from models.afwm import TVLoss,AFWM
 import torch.nn as nn
 import torch.nn.functional as F
 import os
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0, 1")
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -15,7 +16,7 @@ import datetime
 
 opt = TrainOptions().parse()
 path = 'runs/'+opt.name
-os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0, 1, 2, 3")
+
 os.makedirs(path,exist_ok=True)
 os.makedirs(opt.checkpoints_dir,exist_ok=True)
 
@@ -37,7 +38,7 @@ torch.distributed.init_process_group(
     'nccl',
     init_method='env://'
 )
-device = torch.device(f'cuda:{opt.local_rank}')
+device = torch.device(f'cuda:0, cuda:1')
 
 start_epoch, epoch_iter = 1, 0
 
