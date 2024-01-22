@@ -15,6 +15,7 @@ import datetime
 
 opt = TrainOptions().parse()
 path = 'runs/'+opt.name
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0, 1, 2, 3")
 os.makedirs(path,exist_ok=True)
 os.makedirs(opt.checkpoints_dir,exist_ok=True)
 
