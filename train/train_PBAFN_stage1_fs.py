@@ -5,6 +5,7 @@ from models.afwm import TVLoss,AFWM
 import torch.nn as nn
 import torch.nn.functional as F
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
