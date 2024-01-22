@@ -5,7 +5,6 @@ from models.afwm import TVLoss,AFWM
 import torch.nn as nn
 import torch.nn.functional as F
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -55,7 +54,7 @@ warp_model.cuda()
 warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device)
 
 if opt.isTrain and len(opt.gpu_ids):
-    model = torch.nn.parallel.DistributedDataParallel(warp_model)
+    model = torch.nn.parallel.DistributedDataParallel(warp_model, device_ids=[opt.local_rank])
 
 criterionL1 = nn.L1Loss()
 criterionVGG = VGGLoss()
