@@ -31,12 +31,12 @@ def CreateDataset(opt):
 os.makedirs('sample_fs',exist_ok=True)
 iter_path = os.path.join(opt.checkpoints_dir, opt.name, 'iter.txt')
 
-torch.cuda.set_device(0,1)
+torch.cuda.set_device(opt.local_rank)
 torch.distributed.init_process_group(
     'nccl',
     init_method='env://'
 )
-device = torch.device(f'cuda:0,1')
+device = torch.device(f'cuda:{opt.local_rank}')
 
 start_epoch, epoch_iter = 1, 0
 
@@ -54,7 +54,7 @@ warp_model.cuda()
 warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device)
 
 if opt.isTrain and len(opt.gpu_ids):
-    model = torch.nn.parallel.DistributedDataParallel(warp_model, device_ids=[opt.local_rank])
+    model = torch.nn.parallel.DistributedDataParallel(warp_model, device_ids=[0,1])
 
 criterionL1 = nn.L1Loss()
 criterionVGG = VGGLoss()
