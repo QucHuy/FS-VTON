@@ -17,7 +17,7 @@ opt = TrainOptions().parse()
 path = 'runs/'+opt.name
 os.makedirs(path,exist_ok=True)
 os.makedirs(opt.checkpoints_dir,exist_ok=True)
-torch.cuda.set_device(opt.local_rank)
+
 def CreateDataset(opt):
     #training with augumentation
     #from data.aligned_dataset import AlignedDataset_aug
@@ -31,12 +31,12 @@ def CreateDataset(opt):
 os.makedirs('sample_fs',exist_ok=True)
 iter_path = os.path.join(opt.checkpoints_dir, opt.name, 'iter.txt')
 
-
+torch.cuda.set_device(0,1)
 torch.distributed.init_process_group(
     'nccl',
     init_method='env://'
 )
-device = torch.device(f'cuda:{opt.local_rank}')
+device = torch.device(f'cuda:0,1')
 
 start_epoch, epoch_iter = 1, 0
 
