@@ -56,21 +56,19 @@ warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device
 
 
 if opt.isTrain and len(opt.gpu_ids):
-    print("HELLO")
     model = torch.nn.parallel.DistributedDataParallel(warp_model, device_ids=[opt.local_rank])
 model.cuda()
 criterionL1 = nn.L1Loss()
 criterionVGG = VGGLoss()
 
 params_warp = [p for p in model.parameters()]
-print(params_warp[-1])
 optimizer_warp = torch.optim.Adam(params_warp, lr=opt.lr, betas=(opt.beta1, 0.999))
 
 
 if opt.continue_train and opt.PBAFN_warp_checkpoint:
-    checkpoint = torch.load(opt.PBAFN_warp_checkpoint)
-    ckp = refresh(checkpoint['model_state_dict'])
-    model.load_state_dict(ckp)
+    checkpoint = torch.load(opt.PBAFN_warp_checkpoint, map_location= {'cuda:0': 'cuda:1'})
+    # ckp = refresh(checkpoint['model_state_dict'])
+    model.load_state_dict(checkpoint)
     optimizer_warp.load_state_dict(checkpoint['optimizer_state_dict'])
     start_epoch = checkpoint['epoch'] + 1
 
