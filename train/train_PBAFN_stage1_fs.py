@@ -59,9 +59,7 @@ criterionVGG = VGGLoss()
 
 params_warp = [p for p in model.parameters()]
 optimizer_warp = torch.optim.Adam(params_warp, lr=opt.lr, betas=(opt.beta1, 0.999))
-warp_model.train()
-warp_model.cuda()
-warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device)
+
 
 if opt.continue_train and opt.PBAFN_warp_checkpoint:
     checkpoint = torch.load(opt.PBAFN_warp_checkpoint)
@@ -69,6 +67,9 @@ if opt.continue_train and opt.PBAFN_warp_checkpoint:
     optimizer_warp.load_state_dict(checkpoint['optimizer_state_dict'])
     start_epoch = checkpoint['epoch']
     
+warp_model.train()
+warp_model.cuda()
+warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device)
 
 total_steps = (start_epoch-1) * dataset_size + epoch_iter
 step = 0
