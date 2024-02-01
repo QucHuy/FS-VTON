@@ -68,7 +68,7 @@ if opt.continue_train and opt.PBAFN_warp_checkpoint:
     checkpoint = torch.load(opt.PBAFN_warp_checkpoint)
     model.load_state_dict(checkpoint['model_state_dict'], map_location = device)
     optimizer_warp.load_state_dict(checkpoint['optimizer_state_dict'])
-    start_epoch = checkpoint['epoch']
+    start_epoch = checkpoint['epoch'] + 1
 
 
 
