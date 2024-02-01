@@ -48,7 +48,10 @@ dataset_size = len(train_loader)
 print('#training images = %d' % dataset_size)
 
 warp_model = AFWM(opt, 45)
-
+print(warp_model)
+warp_model.train()
+warp_model.cuda()
+warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device)
 
 
 if opt.isTrain and len(opt.gpu_ids):
@@ -63,13 +66,11 @@ optimizer_warp = torch.optim.Adam(params_warp, lr=opt.lr, betas=(opt.beta1, 0.99
 
 if opt.continue_train and opt.PBAFN_warp_checkpoint:
     checkpoint = torch.load(opt.PBAFN_warp_checkpoint)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    model.load_state_dict(checkpoint['model_state_dict'], map_location = device)
     optimizer_warp.load_state_dict(checkpoint['optimizer_state_dict'])
     start_epoch = checkpoint['epoch']
-    
-warp_model.train()
-warp_model.cuda()
-warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device)
+
+
 
 total_steps = (start_epoch-1) * dataset_size + epoch_iter
 step = 0
