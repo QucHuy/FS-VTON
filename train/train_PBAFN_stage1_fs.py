@@ -55,13 +55,14 @@ warp_model.train()
 warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device)
 
 
-# if opt.isTrain and len(opt.gpu_ids):
-model = torch.nn.parallel.DistributedDataParallel(warp_model, device_ids=[opt.local_rank])
+if opt.isTrain and len(opt.gpu_ids):
+    model = torch.nn.parallel.DistributedDataParallel(warp_model, device_ids=[opt.local_rank])
 model.cuda()
 criterionL1 = nn.L1Loss()
 criterionVGG = VGGLoss()
 
 params_warp = [p for p in model.parameters()]
+print(params_warp)
 optimizer_warp = torch.optim.Adam(params_warp, lr=opt.lr, betas=(opt.beta1, 0.999))
 
 
