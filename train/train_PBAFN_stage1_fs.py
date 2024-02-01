@@ -50,13 +50,13 @@ print('#training images = %d' % dataset_size)
 warp_model = AFWM(opt, 45)
 print(warp_model)
 warp_model.train()
-warp_model.cuda()
+
 warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device)
 
 
 if opt.isTrain and len(opt.gpu_ids):
     model = torch.nn.parallel.DistributedDataParallel(warp_model, device_ids=[opt.local_rank])
-
+model.cuda()
 criterionL1 = nn.L1Loss()
 criterionVGG = VGGLoss()
 
