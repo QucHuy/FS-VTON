@@ -1,6 +1,6 @@
 import time
 from options.train_options import TrainOptions
-from models.networks import VGGLoss,save_checkpoint
+from models.networks import VGGLoss,save_checkpoint, refresh
 from models.afwm import TVLoss,AFWM
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,6 +12,7 @@ from torch.utils.data.distributed import DistributedSampler
 from tensorboardX import SummaryWriter
 import cv2
 import datetime
+
 
 opt = TrainOptions().parse()
 path = 'runs/'+opt.name
@@ -66,7 +67,8 @@ optimizer_warp = torch.optim.Adam(params_warp, lr=opt.lr, betas=(opt.beta1, 0.99
 
 if opt.continue_train and opt.PBAFN_warp_checkpoint:
     checkpoint = torch.load(opt.PBAFN_warp_checkpoint)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    ckp = refresh(checkpoint['model_state_dict'])
+    model.load_state_dict(ckp)
     optimizer_warp.load_state_dict(checkpoint['optimizer_state_dict'])
     start_epoch = checkpoint['epoch'] + 1
 

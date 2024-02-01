@@ -205,6 +205,13 @@ def load_checkpoint_part_parallel(model, checkpoint_path):
             checkpoint_new[param] = checkpoint[param]
     model.load_state_dict(checkpoint_new)
 
+def refresh(state_dict):
+    from collections import OrderedDict
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k[7:] # remove 'module.' of dataparallel
+        new_state_dict[name]=v
+    return new_state_dict
 
 # def load_checkpoint(model,optimizer, epoch, loss, checkpoint_path):
 #     if not os.path.exists(checkpoint_path):
