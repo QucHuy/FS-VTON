@@ -62,7 +62,7 @@ criterionL1 = nn.L1Loss()
 criterionVGG = VGGLoss()
 
 params_warp = [p for p in model.parameters()]
-print(params_warp)
+print(params_warp[-1])
 optimizer_warp = torch.optim.Adam(params_warp, lr=opt.lr, betas=(opt.beta1, 0.999))
 
 
