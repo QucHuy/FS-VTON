@@ -13,7 +13,7 @@ from tensorboardX import SummaryWriter
 import cv2
 import datetime
 import wandb
-import util
+from util.util import train_log
 
 
 
@@ -190,7 +190,7 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         if epoch_iter >= dataset_size:
             break
     if (epoch_iter % 25):
-       util.train_log(loss_all,example_ct, epoch )
+       train_log(loss_all,example_ct, epoch )
     # end of epoch 
     iter_end_time = time.time()
     if opt.local_rank == 0:
