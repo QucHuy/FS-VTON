@@ -541,3 +541,12 @@ class AFWM(nn.Module):
             print('update learning rate: %f -> %f' % (self.old_lr_warp, lr))
         self.old_lr_warp = lr
 
+class NetAFWMParallel(nn.DataParallel):
+    def __init__(self, model, local_rank):
+        super(NetAFWMParallel, self).__init__(model, device_ids=[local_rank])
+
+    def __getattr__(self, name):
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return getattr(self.module, name)
