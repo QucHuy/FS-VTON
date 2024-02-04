@@ -12,6 +12,9 @@ from torch.utils.data.distributed import DistributedSampler
 from tensorboardX import SummaryWriter
 import cv2
 import datetime
+import wandb
+import util
+
 
 
 opt = TrainOptions().parse()
@@ -81,6 +84,10 @@ step_per_batch = dataset_size
 if opt.local_rank == 0:
     writer = SummaryWriter(path)
 
+example_ct = 0
+wandb.init(project="new-sota-model")
+wandb.config = {"learning_rate": opt.lr, "epochs": opt.niter + opt.niter_decay, "batch_size": opt.batchSize, "dataset" :"VTON"}
+wandb.watch(model)
 for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
     epoch_start_time = time.time()
     if epoch != start_epoch:
@@ -94,7 +101,7 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         total_steps += 1
         epoch_iter += 1
         save_fake = True
-
+        example_ct += 1
         t_mask = torch.FloatTensor((data['label'].cpu().numpy()==7).astype(np.float64))
         data['label'] = data['label']*(1-t_mask)+t_mask*4
         edge = data['edge']
@@ -182,7 +189,8 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
 
         if epoch_iter >= dataset_size:
             break
-       
+    if (epoch_iter % 25):
+       util.train_log(loss_all,example_ct, epoch )
     # end of epoch 
     iter_end_time = time.time()
     if opt.local_rank == 0:
