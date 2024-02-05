@@ -212,6 +212,8 @@ def refresh(state_dict):
         if k == "module.aflow_net.weight":
             name = k[7:] # remove 'module.' of dataparallel
             new_state_dict[name]=v
+        else:
+            new_state_dict[k]=v
     return new_state_dict
 
 # def load_checkpoint(model,optimizer, epoch, loss, checkpoint_path):
