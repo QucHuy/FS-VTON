@@ -379,6 +379,25 @@ class AFlowNet(nn.Module):
 
         self.netF = []
 
+        filter_x = [[0, 0, 0],
+                    [1, -2, 1],
+                    [0, 0, 0]]
+        filter_y = [[0, 1, 0],
+                    [0, -2, 0],
+                    [0, 1, 0]]
+        filter_diag1 = [[1, 0, 0],
+                        [0, -2, 0],
+                        [0, 0, 1]]
+        filter_diag2 = [[0, 0, 1],
+                        [0, -2, 0],
+                        [1, 0, 0]]
+        weight_array = np.ones([3, 3, 1, 4])
+        weight_array[:, :, 0, 0] = filter_x
+        weight_array[:, :, 0, 1] = filter_y
+        weight_array[:, :, 0, 2] = filter_diag1
+        weight_array[:, :, 0, 3] = filter_diag2
+        weight_array = torch.cuda.FloatTensor(weight_array).permute(3,2,0,1)
+        self.weight = nn.Parameter(data=weight_array, requires_grad=False )
         for i in range(num_pyramid):
 
             netRefine_layer = torch.nn.Sequential(
@@ -423,26 +442,9 @@ class AFlowNet(nn.Module):
         cond_fea_all = []
         delta_x_all = []
         delta_y_all = []
-        filter_x = [[0, 0, 0],
-                    [1, -2, 1],
-                    [0, 0, 0]]
-        filter_y = [[0, 1, 0],
-                    [0, -2, 0],
-                    [0, 1, 0]]
-        filter_diag1 = [[1, 0, 0],
-                        [0, -2, 0],
-                        [0, 0, 1]]
-        filter_diag2 = [[0, 0, 1],
-                        [0, -2, 0],
-                        [1, 0, 0]]
-        weight_array = np.ones([3, 3, 1, 4])
-        weight_array[:, :, 0, 0] = filter_x
-        weight_array[:, :, 0, 1] = filter_y
-        weight_array[:, :, 0, 2] = filter_diag1
-        weight_array[:, :, 0, 3] = filter_diag2
+        
 
-        weight_array = torch.cuda.FloatTensor(weight_array).permute(3,2,0,1)
-        self.weight = nn.Parameter(data=weight_array, requires_grad=False )
+        
 
         #import ipdb; ipdb.set_trace()
 
