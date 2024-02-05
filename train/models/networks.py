@@ -209,10 +209,10 @@ def refresh(state_dict):
     from collections import OrderedDict
     new_state_dict = OrderedDict()
     for k, v in state_dict.items():
-        if k == "module.aflow_net.weight":
-            name = k[7:] # remove 'module.' of dataparallel
-            new_state_dict[name]=v
-        else:
+        if k != "module.aflow_net.weight":
+        #     name = k[7:] # remove 'module.' of dataparallel
+        #     new_state_dict[name]=v
+        # else:
             new_state_dict[k]=v
     return new_state_dict
 
