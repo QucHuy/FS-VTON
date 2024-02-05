@@ -209,8 +209,9 @@ def refresh(state_dict):
     from collections import OrderedDict
     new_state_dict = OrderedDict()
     for k, v in state_dict.items():
-        name = k[7:] # remove 'module.' of dataparallel
-        new_state_dict[name]=v
+        if k == "module.aflow_net.weight":
+            name = k[7:] # remove 'module.' of dataparallel
+            new_state_dict[name]=v
     return new_state_dict
 
 # def load_checkpoint(model,optimizer, epoch, loss, checkpoint_path):
