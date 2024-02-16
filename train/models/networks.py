@@ -188,10 +188,10 @@ def load_checkpoint_parallel(model, checkpoint_path):
         return
 
     checkpoint = torch.load(checkpoint_path, map_location='cuda:{}'.format(opt.local_rank))
+    prev_checkpoint = refresh(checkpoint["model_state_dict"])
     checkpoint_new = model.state_dict()
-    for param in checkpoint_new:
-        print(param)
-        # checkpoint_new[param] = checkpoint["model_state_dict"][param]
+    for param in checkpoint_new: 
+        checkpoint_new[param] = prev_checkpoint[param]
     model.load_state_dict(checkpoint_new)
 
 def load_checkpoint_part_parallel(model, checkpoint_path):
@@ -210,11 +210,11 @@ def refresh(state_dict):
     from collections import OrderedDict
     new_state_dict = OrderedDict()
     for k, v in state_dict.items():
-        if k != "module.aflow_net.weight":
-        #     name = k[7:] # remove 'module.' of dataparallel
-        #     new_state_dict[name]=v
-        # else:
-            new_state_dict[k]=v
+        # if k != "module.aflow_net.weight":
+        name = k[7:] # remove 'module.' of dataparallel
+        new_state_dict[name]=v
+        # # else:
+        #     new_state_dict[k]=v
     return new_state_dict
 
 class NetUNETParallel(nn.DataParallel):

@@ -1,6 +1,6 @@
 import time
 from options.train_options import TrainOptions
-from models.networks import ResUnetGenerator, VGGLoss, save_checkpoint, load_checkpoint_parallel, NetUNETParallel
+from models.networks import ResUnetGenerator, VGGLoss, save_checkpoint, load_checkpoint_parallel, NetUNETParallel, refresh
 from models.afwm import TVLoss, AFWM, NetAFWMParallel
 import torch.nn as nn
 import torch.nn.functional as F
@@ -52,7 +52,8 @@ warp_model = AFWM(opt, 45)
 print(warp_model)
 warp_model.train()
 warp_model.cuda()
-load_checkpoint_parallel(warp_model, opt.PBAFN_warp_checkpoint)
+if opt.continue_train == False:
+  load_checkpoint_parallel(warp_model, opt.PBAFN_warp_checkpoint)
 
 gen_model = ResUnetGenerator(8, 4, 5, ngf=64, norm_layer=nn.BatchNorm2d)
 print(gen_model)
@@ -76,12 +77,15 @@ optimizer_gen = torch.optim.Adam(params_gen, lr=opt.lr, betas=(opt.beta1, 0.999)
 
 
 if opt.continue_train and opt.PBAFN_warp_checkpoint_continue and opt.PBAFN_gen_checkpoint_continue:
-    warp_checkpoint = torch.load(opt.PBAFN_warp_checkpoint)
-    gen_checkpoint = torch.load(opt.PBAFN_gen_checkpoint)
-    # ckp = refresh(checkpoint['model_state_dict'])
-    model_warp.load_state_dict(warp_checkpoint['model_state_dict'])
+    warp_checkpoint = torch.load(opt.PBAFN_warp_checkpoint_continue)
+    gen_checkpoint = torch.load(opt.PBAFN_gen_checkpoint_continue)
+    w_ckp = refresh(warp_checkpoint['model_state_dict'])
+    model_warp.load_state_dict(w_ckp)
     optimizer_warp.load_state_dict(warp_checkpoint['optimizer_state_dict'])
-    model_gen.load_state_dict(gen_checkpoint['model_state_dict'])
+
+
+    g_ckp = refresh(gen_checkpoint['model_state_dict'])
+    model_gen.load_state_dict(g_ckp)
     optimizer_gen.load_state_dict(gen_checkpoint['optimizer_state_dict'])
 
 
