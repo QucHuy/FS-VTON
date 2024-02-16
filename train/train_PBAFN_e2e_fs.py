@@ -268,7 +268,7 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))        
         save_checkpoint(epoch, model_warp, optimizer_warp, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_warp_epoch_%03d.pth' % (epoch+1)))
         # save_checkpoint(model_gen, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_gen_epoch_%03d.pth' % (epoch+1)))
-        save_checkpoint(epoch, model_gen, optimizer_gen, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_warp_epoch_%03d.pth' % (epoch+1)))
+        save_checkpoint(epoch, model_gen, optimizer_gen, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_gen_epoch_%03d.pth' % (epoch+1)))
 
     if epoch > opt.niter:
         model_warp.module.update_learning_rate_warp(optimizer_warp)
