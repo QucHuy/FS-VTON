@@ -1,7 +1,7 @@
 import time
 from options.train_options import TrainOptions
-from models.networks import ResUnetGenerator, VGGLoss, save_checkpoint, load_checkpoint_parallel
-from models.afwm import TVLoss, AFWM
+from models.networks import ResUnetGenerator, VGGLoss, save_checkpoint, load_checkpoint_parallel, NetUNETParallel
+from models.afwm import TVLoss, AFWM, NetAFWMParallel
 import torch.nn as nn
 import torch.nn.functional as F
 import os
@@ -12,7 +12,8 @@ from torch.utils.data.distributed import DistributedSampler
 from tensorboardX import SummaryWriter
 import cv2
 import datetime
-
+from util.util import train_log
+import wandb
 opt = TrainOptions().parse()
 path = 'runs/'+opt.name
 os.makedirs(path,exist_ok=True)
@@ -62,21 +63,39 @@ warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(warp_model).to(device
 gen_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(gen_model).to(device)
 
 if opt.isTrain and len(opt.gpu_ids):
-    model = torch.nn.parallel.DistributedDataParallel(warp_model, device_ids=[opt.local_rank])
-    model_gen = torch.nn.parallel.DistributedDataParallel(gen_model, device_ids=[opt.local_rank])
+    model_warp = NetAFWMParallel(warp_model, opt.local_rank)
+    model_gen = NetUNETParallel(gen_model, opt.local_rank)
 
 criterionL1 = nn.L1Loss()
 criterionVGG = VGGLoss()
 # optimizer
-params_warp = [p for p in model.parameters()]
+params_warp = [p for p in model_warp.parameters()]
 params_gen = [p for p in model_gen.parameters()]
 optimizer_warp = torch.optim.Adam(params_warp, lr=0.2*opt.lr, betas=(opt.beta1, 0.999))
 optimizer_gen = torch.optim.Adam(params_gen, lr=opt.lr, betas=(opt.beta1, 0.999))
 
-total_steps = (start_epoch-1) * dataset_size + epoch_iter
 
+if opt.continue_train and opt.PBAFN_warp_checkpoint_continue and opt.PBAFN_gen_checkpoint_continue:
+    warp_checkpoint = torch.load(opt.PBAFN_warp_checkpoint)
+    gen_checkpoint = torch.load(opt.PBAFN_gen_checkpoint)
+    # ckp = refresh(checkpoint['model_state_dict'])
+    model_warp.load_state_dict(warp_checkpoint['model_state_dict'])
+    optimizer_warp.load_state_dict(warp_checkpoint['optimizer_state_dict'])
+    model_gen.load_state_dict(gen_checkpoint['model_state_dict'])
+    optimizer_gen.load_state_dict(gen_checkpoint['optimizer_state_dict'])
+
+
+    
+
+total_steps = (start_epoch-1) * dataset_size + epoch_iter
+example_ct = 0
 step = 0
 step_per_batch = dataset_size
+
+
+wandb.init(project="PB_e2e")
+wandb.config = {"learning_rate": opt.lr, "epochs": opt.niter + opt.niter_decay, "batch_size": opt.batchSize, "dataset" :"VTON"}
+wandb.watch(gen_model)
 
 if opt.local_rank == 0:
     writer = SummaryWriter(path)
@@ -95,14 +114,15 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         total_steps += 1
         epoch_iter += 1
         save_fake = True
+        example_ct += 1
 
-        t_mask = torch.FloatTensor((data['label'].cpu().numpy()==7).astype(np.float))
+        t_mask = torch.FloatTensor((data['label'].cpu().numpy()==7).astype(np.float64))
         data['label'] = data['label']*(1-t_mask)+t_mask*4
         edge = data['edge']
-        pre_clothes_edge = torch.FloatTensor((edge.detach().numpy() > 0.5).astype(np.int))
+        pre_clothes_edge = torch.FloatTensor((edge.detach().numpy() > 0.5).astype(np.int64))
         clothes = data['color']
         clothes = clothes * pre_clothes_edge
-        person_clothes_edge = torch.FloatTensor((data['label'].cpu().numpy()==4).astype(np.int))
+        person_clothes_edge = torch.FloatTensor((data['label'].cpu().numpy()==4).astype(np.int64))
         real_image = data['image']
         person_clothes = real_image*person_clothes_edge
         pose = data['pose']
@@ -111,27 +131,27 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         densepose = torch.cuda.FloatTensor(torch.Size(oneHot_size1)).zero_()
         densepose = densepose.scatter_(1,data['densepose'].data.long().cuda(),1.0)
         densepose_fore = data['densepose']/24.0
-        face_mask = torch.FloatTensor((data['label'].cpu().numpy()==1).astype(np.int))+torch.FloatTensor((data['label'].cpu().numpy()==12).astype(np.int))
-        other_clothes_mask = torch.FloatTensor((data['label'].cpu().numpy()==5).astype(np.int)) + torch.FloatTensor((data['label'].cpu().numpy()==6).astype(np.int))\
-                             + torch.FloatTensor((data['label'].cpu().numpy()==8).astype(np.int)) + torch.FloatTensor((data['label'].cpu().numpy()==9).astype(np.int))\
-                             + torch.FloatTensor((data['label'].cpu().numpy()==10).astype(np.int))
+        face_mask = torch.FloatTensor((data['label'].cpu().numpy()==1).astype(np.int64))+torch.FloatTensor((data['label'].cpu().numpy()==12).astype(np.int64))
+        other_clothes_mask = torch.FloatTensor((data['label'].cpu().numpy()==5).astype(np.int64)) + torch.FloatTensor((data['label'].cpu().numpy()==6).astype(np.int64))\
+                             + torch.FloatTensor((data['label'].cpu().numpy()==8).astype(np.int64)) + torch.FloatTensor((data['label'].cpu().numpy()==9).astype(np.int64))\
+                             + torch.FloatTensor((data['label'].cpu().numpy()==10).astype(np.int64))
         face_img = face_mask * real_image
         other_clothes_img = other_clothes_mask * real_image
         preserve_region = face_img + other_clothes_img
         preserve_mask = torch.cat([face_mask, other_clothes_mask],1)
         concat = torch.cat([preserve_mask.cuda(), densepose, pose.cuda()],1)
-        arm_mask = torch.FloatTensor((data['label'].cpu().numpy()==11).astype(np.float)) + torch.FloatTensor((data['label'].cpu().numpy()==13).astype(np.float))
-        hand_mask = torch.FloatTensor((data['densepose'].cpu().numpy()==3).astype(np.int)) + torch.FloatTensor((data['densepose'].cpu().numpy()==4).astype(np.int))
+        arm_mask = torch.FloatTensor((data['label'].cpu().numpy()==11).astype(np.float64)) + torch.FloatTensor((data['label'].cpu().numpy()==13).astype(np.float64))
+        hand_mask = torch.FloatTensor((data['densepose'].cpu().numpy()==3).astype(np.int64)) + torch.FloatTensor((data['densepose'].cpu().numpy()==4).astype(np.int64))
         hand_mask = arm_mask*hand_mask
         hand_img = hand_mask*real_image
-        dense_preserve_mask = torch.FloatTensor((data['densepose'].cpu().numpy()==15).astype(np.int))+torch.FloatTensor((data['densepose'].cpu().numpy()==16).astype(np.int))\
-                              +torch.FloatTensor((data['densepose'].cpu().numpy()==17).astype(np.int))+torch.FloatTensor((data['densepose'].cpu().numpy()==18).astype(np.int))\
-                              +torch.FloatTensor((data['densepose'].cpu().numpy()==19).astype(np.int))+torch.FloatTensor((data['densepose'].cpu().numpy()==20).astype(np.int))\
-                              +torch.FloatTensor((data['densepose'].cpu().numpy()==21).astype(np.int))+torch.FloatTensor((data['densepose'].cpu().numpy()==22))
+        dense_preserve_mask = torch.FloatTensor((data['densepose'].cpu().numpy()==15).astype(np.int64))+torch.FloatTensor((data['densepose'].cpu().numpy()==16).astype(np.int64))\
+                              +torch.FloatTensor((data['densepose'].cpu().numpy()==17).astype(np.int64))+torch.FloatTensor((data['densepose'].cpu().numpy()==18).astype(np.int64))\
+                              +torch.FloatTensor((data['densepose'].cpu().numpy()==19).astype(np.int64))+torch.FloatTensor((data['densepose'].cpu().numpy()==20).astype(np.int64))\
+                              +torch.FloatTensor((data['densepose'].cpu().numpy()==21).astype(np.int64))+torch.FloatTensor((data['densepose'].cpu().numpy()==22))
         dense_preserve_mask = dense_preserve_mask.cuda()*(1-person_clothes_edge.cuda())
         preserve_region = face_img + other_clothes_img +hand_img
 
-        flow_out = model(concat.cuda(), clothes.cuda(), pre_clothes_edge.cuda())
+        flow_out = model_warp(concat.cuda(), clothes.cuda(), pre_clothes_edge.cuda())
         warped_cloth, last_flow, _1, _2, delta_list, x_all, x_edge_all, delta_x_all, delta_y_all = flow_out
 
         epsilon = 0.001
@@ -230,6 +250,10 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             break
 
     iter_end_time = time.time()
+
+    if (epoch_iter % 25):
+       train_log(gen_loss,example_ct, epoch)
+
     if opt.local_rank == 0:
       print('End of epoch %d / %d \t Time Taken: %d sec' %
             (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
@@ -238,9 +262,9 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
     if epoch % opt.save_epoch_freq == 0:
       if opt.local_rank == 0:
         print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))        
-        save_checkpoint(model.module, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_warp_epoch_%03d.pth' % (epoch+1)))
-        save_checkpoint(model_gen.module, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_gen_epoch_%03d.pth' % (epoch+1)))
+        save_checkpoint(model_warp, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_warp_epoch_%03d.pth' % (epoch+1)))
+        save_checkpoint(model_gen, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_gen_epoch_%03d.pth' % (epoch+1)))
 
     if epoch > opt.niter:
-        model.module.update_learning_rate_warp(optimizer_warp)
-        model.module.update_learning_rate(optimizer_gen)
+        model_warp.module.update_learning_rate_warp(optimizer_warp)
+        model_warp.module.update_learning_rate(optimizer_gen)

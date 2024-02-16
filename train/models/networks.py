@@ -216,15 +216,14 @@ def refresh(state_dict):
             new_state_dict[k]=v
     return new_state_dict
 
-# def load_checkpoint(model,optimizer, epoch, loss, checkpoint_path):
-#     if not os.path.exists(checkpoint_path):
-#         print('No checkpoint!')
-#         return
-    
-#     checkpoint = torch.load(checkpoint_path)
-#     model.load_state_dict(checkpoint['model_state_dict'])
-#     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-#     epoch = checkpoint['epoch']
-#     loss = checkpoint['loss']
+class NetUNETParallel(nn.DataParallel):
+    def __init__(self, model, local_rank):
+        super(NetUNETParallel, self).__init__(model, device_ids=[local_rank])
+
+    def __getattr__(self, name):
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return getattr(self.module, name)
 
     

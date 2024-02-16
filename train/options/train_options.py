@@ -28,6 +28,12 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--PFAFN_gen_checkpoint', type=str,  help='load the pretrained model from the specified location')
         self.parser.add_argument('--PBAFN_warp_checkpoint', type=str, help='load the pretrained model from the specified location')
         self.parser.add_argument('--PBAFN_gen_checkpoint', type=str,  help='load the pretrained model from the specified location')
+
+
+        self.parser.add_argument('--PFAFN_warp_checkpoint_continue', type=str, help='load the pretrained model from the specified location')
+        self.parser.add_argument('--PFAFN_gen_checkpoint_continue', type=str,  help='load the pretrained model from the specified location')
+        self.parser.add_argument('--PBAFN_warp_checkpoint_continue', type=str, help='load the pretrained model from the specified location')
+        self.parser.add_argument('--PBAFN_gen_checkpoint_continue', type=str,  help='load the pretrained model from the specified location')
         # for discriminators        
         self.parser.add_argument('--num_D', type=int, default=2, help='number of discriminators to use')
         self.parser.add_argument('--n_layers_D', type=int, default=3, help='only used if which_model_netD==n_layers')

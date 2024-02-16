@@ -68,8 +68,8 @@ params_warp = [p for p in model.parameters()]
 optimizer_warp = torch.optim.Adam(params_warp, lr=opt.lr, betas=(opt.beta1, 0.999))
 
 
-if opt.continue_train and opt.PBAFN_warp_checkpoint:
-    checkpoint = torch.load(opt.PBAFN_warp_checkpoint)
+if opt.continue_train and opt.PBAFN_warp_checkpoint_continue:
+    checkpoint = torch.load(opt.PBAFN_warp_checkpoint_continue)
     # ckp = refresh(checkpoint['model_state_dict'])
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer_warp.load_state_dict(checkpoint['optimizer_state_dict'])

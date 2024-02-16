@@ -6,6 +6,15 @@ from math import sqrt
 from options.train_options import TrainOptions
 opt = TrainOptions().parse()
 
+
+class PixelNorm(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, input):
+        return input / torch.sqrt(torch.mean(input ** 2, dim=1, keepdim=True) + 1e-8)
+
+
 def apply_offset(offset):
     sizes = list(offset.size()[2:])
     grid_list = torch.meshgrid([torch.arange(size, device=offset.device) for size in sizes])
@@ -72,6 +81,18 @@ class EqualLinear(nn.Module):
     def forward(self, input):
         return self.linear(input)
 
+class EqualConv2d(nn.Module):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+        conv = nn.Conv2d(*args, **kwargs)
+        conv.weight.data.normal_()
+        conv.bias.data.zero_()
+        self.conv = equal_lr(conv)
+
+    def forward(self, input):
+        return self.conv(input)
+    
 class ModulatedConv2d(nn.Module):
     def __init__(self, fin, fout, kernel_size, padding_type='zero', upsample=False, downsample=False, latent_dim=512, normalize_mlp=False):
         super(ModulatedConv2d, self).__init__()
