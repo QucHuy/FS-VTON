@@ -79,13 +79,14 @@ optimizer_gen = torch.optim.Adam(params_gen, lr=opt.lr, betas=(opt.beta1, 0.999)
 if opt.continue_train and opt.PBAFN_warp_checkpoint_continue and opt.PBAFN_gen_checkpoint_continue:
     warp_checkpoint = torch.load(opt.PBAFN_warp_checkpoint_continue)
     gen_checkpoint = torch.load(opt.PBAFN_gen_checkpoint_continue)
-    w_ckp = refresh(warp_checkpoint['model_state_dict'])
-    model_warp.load_state_dict(w_ckp)
+
+    # w_ckp = refresh(warp_checkpoint['model_state_dict'])
+    model_warp.load_state_dict(warp_checkpoint['model_state_dict'])
     optimizer_warp.load_state_dict(warp_checkpoint['optimizer_state_dict'])
 
 
-    g_ckp = refresh(gen_checkpoint['model_state_dict'])
-    model_gen.load_state_dict(g_ckp)
+    # g_ckp = refresh(gen_checkpoint['model_state_dict'])
+    model_gen.load_state_dict(gen_checkpoint['model_state_dict'])
     optimizer_gen.load_state_dict(gen_checkpoint['optimizer_state_dict'])
     start_epoch = warp_checkpoint['epoch'] + 1
 
