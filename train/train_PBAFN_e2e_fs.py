@@ -87,6 +87,7 @@ if opt.continue_train and opt.PBAFN_warp_checkpoint_continue and opt.PBAFN_gen_c
     g_ckp = refresh(gen_checkpoint['model_state_dict'])
     model_gen.load_state_dict(g_ckp)
     optimizer_gen.load_state_dict(gen_checkpoint['optimizer_state_dict'])
+    start_epoch = warp_checkpoint['epoch'] + 1
 
 
     
