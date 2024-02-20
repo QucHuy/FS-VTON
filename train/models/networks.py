@@ -171,6 +171,17 @@ class VGGLoss(nn.Module):
             loss += self.weights[i] * self.criterion(x_vgg[i], y_vgg[i].detach())
         return loss
 
+def save_checkpoint_PF_AFN(epoch, model, optimizer, optimizer_part, save_path):
+    if not os.path.exists(os.path.dirname(save_path)):
+        os.makedirs(os.path.dirname(save_path))
+    torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'optimizer_part_state_dict': optimizer_part.state_dict()
+            }, save_path)
+    
+
 def save_checkpoint(epoch, model, optimizer, save_path):
     if not os.path.exists(os.path.dirname(save_path)):
         os.makedirs(os.path.dirname(save_path))
@@ -179,7 +190,6 @@ def save_checkpoint(epoch, model, optimizer, save_path):
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict()
             }, save_path)
-
 
 def load_checkpoint_parallel(model, checkpoint_path):
 

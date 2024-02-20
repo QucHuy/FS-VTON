@@ -1,8 +1,8 @@
 import time
 from options.train_options import TrainOptions
-from models.networks import ResUnetGenerator, VGGLoss, save_checkpoint, load_checkpoint_part_parallel, \
-    load_checkpoint_parallel
-from models.afwm import TVLoss, AFWM
+from models.networks import ResUnetGenerator, VGGLoss, save_checkpoint_PF_AFN, load_checkpoint_part_parallel, \
+    load_checkpoint_parallel, NetUNETParallel
+from models.afwm import TVLoss, AFWM, NetAFWMParallel
 import torch.nn as nn
 import torch.nn.functional as F
 import os
@@ -13,6 +13,9 @@ from torch.utils.data.distributed import DistributedSampler
 from tensorboardX import SummaryWriter
 import cv2
 import datetime
+import wandb
+from util.util import train_log
+
 
 opt = TrainOptions().parse()
 path = 'runs/' + opt.name
@@ -72,9 +75,9 @@ load_checkpoint_parallel(PB_gen_model, opt.PBAFN_gen_checkpoint)
 PF_warp_model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(PF_warp_model).to(device)
 
 if opt.isTrain and len(opt.gpu_ids):
-    PF_warp_model = torch.nn.parallel.DistributedDataParallel(PF_warp_model, device_ids=[opt.local_rank])
-    PB_warp_model = torch.nn.parallel.DistributedDataParallel(PB_warp_model, device_ids=[opt.local_rank])
-    PB_gen_model = torch.nn.parallel.DistributedDataParallel(PB_gen_model, device_ids=[opt.local_rank])
+    PF_warp_model = NetAFWMParallel(PF_warp_model, opt.local_rank)
+    PB_warp_model = NetAFWMParallel(PB_warp_model, opt.local_rank)
+    PB_gen_model = NetUNETParallel(PB_gen_model, opt.local_rank)
 
 criterionL1 = nn.L1Loss()
 criterionVGG = VGGLoss()
@@ -90,10 +93,23 @@ for name, param in PF_warp_model.named_parameters():
         params_part.append(param)
 optimizer_part = torch.optim.Adam(params_part, lr=opt.lr, betas=(opt.beta1, 0.999))
 
+if opt.continue_train and opt.PFAFN_warp_checkpoint_continue:
+    warp_checkpoint = torch.load(opt.PFAFN_warp_checkpoint_continue)
+    # w_ckp = refresh(warp_checkpoint['model_state_dict'])
+    PF_warp_model.load_state_dict(warp_checkpoint['model_state_dict'])
+    optimizer.load_state_dict(warp_checkpoint['optimizer_state_dict'])
+    optimizer_part.load_state_dict(warp_checkpoint['optimizer_part_state_dict'])
+    start_epoch = warp_checkpoint['epoch'] + 1
+
 total_steps = (start_epoch - 1) * dataset_size + epoch_iter
 
 if opt.local_rank == 0:
     writer = SummaryWriter(path)
+
+example_ct = 0
+wandb.init(project="new-sota-model")
+wandb.config = {"learning_rate": opt.lr, "epochs": opt.niter + opt.niter_decay, "batch_size": opt.batchSize, "dataset" :"VTON"}
+wandb.watch(PF_warp_model)
 
 step = 0
 step_per_batch = dataset_size
@@ -264,6 +280,8 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
 
         if epoch_iter >= dataset_size:
             break
+    if (epoch_iter % 25):
+       train_log(loss_all,example_ct, epoch )
 
     # end of epoch
     iter_end_time = time.time()
@@ -275,8 +293,10 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
     if epoch % opt.save_epoch_freq == 0:
         if opt.local_rank == 0:
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))
-            save_checkpoint(PF_warp_model.module,
-                            os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_warp_epoch_%03d.pth' % (epoch + 1)))
+            # save_checkpoint(PF_warp_model.module,
+            #                 os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_warp_epoch_%03d.pth' % (epoch + 1)))
+            save_checkpoint_PF_AFN(epoch, PF_warp_model, optimizer, optimizer_part, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_warp_epoch_%03d.pth' % (epoch+1)))
+
 
     if epoch > opt.niter:
         PF_warp_model.module.update_learning_rate(optimizer)
