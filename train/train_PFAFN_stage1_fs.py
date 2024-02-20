@@ -96,7 +96,7 @@ optimizer_part = torch.optim.Adam(params_part, lr=opt.lr, betas=(opt.beta1, 0.99
 if opt.continue_train and opt.PFAFN_warp_checkpoint_continue:
     warp_checkpoint = torch.load(opt.PFAFN_warp_checkpoint_continue)
     # w_ckp = refresh(warp_checkpoint['model_state_dict'])
-    PF_warp_model.load_state_dict(warp_checkpoint['model_state_dict'])
+    load_checkpoint_part_parallel(PF_warp_model, opt.PFAFN_warp_checkpoint_continue)
     optimizer.load_state_dict(warp_checkpoint['optimizer_state_dict'])
     optimizer_part.load_state_dict(warp_checkpoint['optimizer_part_state_dict'])
     start_epoch = warp_checkpoint['epoch'] + 1
@@ -107,7 +107,7 @@ if opt.local_rank == 0:
     writer = SummaryWriter(path)
 
 example_ct = 0
-wandb.init(project="new-sota-model")
+wandb.init(project="PF_stage1")
 wandb.config = {"learning_rate": opt.lr, "epochs": opt.niter + opt.niter_decay, "batch_size": opt.batchSize, "dataset" :"VTON"}
 wandb.watch(PF_warp_model)
 
