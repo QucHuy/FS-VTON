@@ -295,7 +295,7 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))
             # save_checkpoint(PF_warp_model.module,
             #                 os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_warp_epoch_%03d.pth' % (epoch + 1)))
-            save_checkpoint_PF_AFN(epoch, PF_warp_model, optimizer, optimizer_part, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_warp_epoch_%03d.pth' % (epoch+1)))
+            save_checkpoint_PF_AFN(epoch, PF_warp_model, optimizer, optimizer_part, os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_warp_epoch_%03d.pth' % (epoch+1)))
 
 
     if epoch > opt.niter:
