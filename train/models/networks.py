@@ -189,10 +189,8 @@ def load_checkpoint_parallel(model, checkpoint_path):
 
     checkpoint = torch.load(checkpoint_path, map_location='cuda:{}'.format(opt.local_rank))
     prev_checkpoint = refresh(checkpoint["model_state_dict"])
-    checkpoint_new = model.state_dict()
-    for param in checkpoint_new: 
-        checkpoint_new[param] = prev_checkpoint[param]
-    model.load_state_dict(checkpoint_new)
+    
+    model.load_state_dict(prev_checkpoint)
 
 def load_checkpoint_part_parallel(model, checkpoint_path):
 
