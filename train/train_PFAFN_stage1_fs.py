@@ -58,11 +58,12 @@ PF_warp_model = AFWM(opt, 3)
 print(PF_warp_model)
 PF_warp_model.train()
 PF_warp_model.cuda()
-load_checkpoint_part_parallel(PF_warp_model, opt.PBAFN_warp_checkpoint)
+if opt.continue_train ==False:
+    load_checkpoint_part_parallel(PF_warp_model, opt.PBAFN_warp_checkpoint, 0)
 
 PB_warp_model = AFWM(opt, 45)
 print(PB_warp_model)
-PB_warp_model.eval()
+PB_warp_model.eval()    
 PB_warp_model.cuda()
 load_checkpoint_parallel(PB_warp_model, opt.PBAFN_warp_checkpoint)
 
@@ -96,7 +97,7 @@ optimizer_part = torch.optim.Adam(params_part, lr=opt.lr, betas=(opt.beta1, 0.99
 if opt.continue_train and opt.PFAFN_warp_checkpoint_continue:
     warp_checkpoint = torch.load(opt.PFAFN_warp_checkpoint_continue)
     # w_ckp = refresh(warp_checkpoint['model_state_dict'])
-    load_checkpoint_part_parallel(PF_warp_model, opt.PFAFN_warp_checkpoint_continue)
+    load_checkpoint_part_parallel(PF_warp_model, opt.PFAFN_warp_checkpoint_continue, 1)
     optimizer.load_state_dict(warp_checkpoint['optimizer_state_dict'])
     optimizer_part.load_state_dict(warp_checkpoint['optimizer_part_state_dict'])
     start_epoch = warp_checkpoint['epoch'] + 1

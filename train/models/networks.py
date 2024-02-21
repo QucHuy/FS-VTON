@@ -202,22 +202,23 @@ def load_checkpoint_parallel(model, checkpoint_path):
     
     model.load_state_dict(prev_checkpoint)
 
-def load_checkpoint_part_parallel(model, checkpoint_path):
+def load_checkpoint_part_parallel(model, checkpoint_path, status):
 
     if not os.path.exists(checkpoint_path):
         print('No checkpoint!')
         return
     checkpoint = torch.load(checkpoint_path,map_location='cuda:{}'.format(opt.local_rank))["model_state_dict"]
     checkpoint_new = model.state_dict()
-    # ckp = refresh(checkpoint["model_state_dict"])
-    for param in checkpoint:
-        print(param)
-    print("_______")
+    if status == 0:
+        ckp = refresh(checkpoint["model_state_dict"])
+    else:
+        ckp = checkpoint
+    # for param in 
     for param in checkpoint_new:
-        # if 'cond_' not in param and 'aflow_net.netRefine' not in param or 'aflow_net.cond_style' in param:
-        #     checkpoint_new[param] = checkpoint[param]
-        print(param)
-    # model.load_state_dict(checkpoint_new)
+        if 'cond_' not in param and 'aflow_net.netRefine' not in param or 'aflow_net.cond_style' in param:
+            checkpoint_new[param] = ckp[param]
+        
+    model.load_state_dict(checkpoint_new)
 
 def refresh(state_dict):
     from collections import OrderedDict
