@@ -98,8 +98,9 @@ if opt.continue_train and opt.PFAFN_warp_checkpoint_continue:
     warp_checkpoint = torch.load(opt.PFAFN_warp_checkpoint_continue)
     w_ckp = refresh(warp_checkpoint['model_state_dict'])
     # load_checkpoint_parallel(PF_warp_model, opt.PFAFN_warp_checkpoint_continue, 1)
-    optimizer.load_state_dict(w_ckp['optimizer_state_dict'])
-    optimizer_part.load_state_dict(w_ckp['optimizer_part_state_dict'])
+    PF_warp_model.load_state_dict(w_ckp)
+    optimizer.load_state_dict(warp_checkpoint['optimizer_state_dict'])
+    optimizer_part.load_state_dict(warp_checkpoint['optimizer_part_state_dict'])
     start_epoch = warp_checkpoint['epoch'] + 1
 
 total_steps = (start_epoch - 1) * dataset_size + epoch_iter
