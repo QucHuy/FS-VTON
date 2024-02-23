@@ -130,7 +130,7 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         total_steps += 1
         epoch_iter += 1
         save_fake = True
-
+        example_ct += 1
         t_mask = torch.FloatTensor((data['label'].cpu().numpy() == 7).astype(np.float64))
         data['label'] = data['label'] * (1 - t_mask) + t_mask * 4
         edge = data['edge']
