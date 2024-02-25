@@ -18,7 +18,7 @@ import torch
 # import os
 # import torchvision.transforms as transforms
 #python test.py 
-model = torch.load("D:\FSVTONdata\PBAFN_warp_epoch_101.pth",map_location=torch.device('cpu'))
+model = torch.load("D:\FSVTONdata\pfafn\PFAFN_warp_epoch_174.pth",map_location=torch.device('cpu'))
 
 for k, v in model['model_state_dict'].items():
     # if k == "param_groups":
