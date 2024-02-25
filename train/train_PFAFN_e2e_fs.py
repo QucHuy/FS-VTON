@@ -324,10 +324,14 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
     if epoch % opt.save_epoch_freq == 0:
         if opt.local_rank == 0:
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))
-            save_checkpoint(PF_warp_model.module,
-                            os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_warp_epoch_%03d.pth' % (epoch + 1)))
-            save_checkpoint(PF_gen_model.module,
-                            os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_gen_epoch_%03d.pth' % (epoch + 1)))
+            # save_checkpoint(PF_warp_model.module,
+            #                 os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_warp_epoch_%03d.pth' % (epoch + 1)))
+            # save_checkpoint(PF_gen_model.module,
+            #                 os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_gen_epoch_%03d.pth' % (epoch + 1)))
+            save_checkpoint(epoch, PF_warp_model, optimizer_warp, os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_warp_epoch_%03d.pth' % (epoch+1)))
+            save_checkpoint(epoch, PF_gen_model, optimizer_gen, os.path.join(opt.checkpoints_dir, opt.name, 'PFAFN_gen_epoch_%03d.pth' % (epoch+1)))
+
+
     if (epoch_iter % 25):
        train_log(loss_gen,example_ct, epoch)
 
