@@ -213,7 +213,6 @@ def load_checkpoint_part_parallel(model, checkpoint_path, status):
         ckp = refresh(checkpoint["model_state_dict"])
     else:
         ckp = checkpoint
-    # for param in 
     for param in checkpoint_new:
         if 'cond_' not in param and 'aflow_net.netRefine' not in param or 'aflow_net.cond_style' in param:
             checkpoint_new[param] = ckp[param]

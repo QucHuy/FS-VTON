@@ -78,58 +78,60 @@ for epoch in range(1,2):
         clothes = clothes * edge        
 
         #import ipdb; ipdb.set_trace()
+        print(real_image.shape)
+        print(clothes.shape)
+        print(edge.shape)
+        # flow_out = warp_model(real_image.cuda(), clothes.cuda())
+        # warped_cloth, last_flow, = flow_out
+        # warped_edge = F.grid_sample(edge.cuda(), last_flow.permute(0, 2, 3, 1),
+        #                   mode='bilinear', padding_mode='zeros',align_corners=True)
 
-        flow_out = warp_model(real_image.cuda(), clothes.cuda())
-        warped_cloth, last_flow, = flow_out
-        warped_edge = F.grid_sample(edge.cuda(), last_flow.permute(0, 2, 3, 1),
-                          mode='bilinear', padding_mode='zeros',align_corners=True)
+        # gen_inputs = torch.cat([real_image.cuda(), warped_cloth, warped_edge], 1)
+        # gen_outputs = gen_model(gen_inputs)
+        # p_rendered, m_composite = torch.split(gen_outputs, [3, 1], 1)
+        # p_rendered = torch.tanh(p_rendered)
+        # m_composite = torch.sigmoid(m_composite)
+        # m_composite = m_composite * warped_edge
+        # p_tryon = warped_cloth * m_composite + p_rendered * (1 - m_composite)
 
-        gen_inputs = torch.cat([real_image.cuda(), warped_cloth, warped_edge], 1)
-        gen_outputs = gen_model(gen_inputs)
-        p_rendered, m_composite = torch.split(gen_outputs, [3, 1], 1)
-        p_rendered = torch.tanh(p_rendered)
-        m_composite = torch.sigmoid(m_composite)
-        m_composite = m_composite * warped_edge
-        p_tryon = warped_cloth * m_composite + p_rendered * (1 - m_composite)
+        # path = 'results/' + opt.name
+        # os.makedirs(path, exist_ok=True)
+        # #sub_path = path + '/PFAFN'
+        # #os.makedirs(sub_path,exist_ok=True)
+        # print(data['p_name'])
 
-        path = 'results/' + opt.name
-        os.makedirs(path, exist_ok=True)
-        #sub_path = path + '/PFAFN'
-        #os.makedirs(sub_path,exist_ok=True)
-        print(data['p_name'])
-
-        if step % 1 == 0:
+        # if step % 1 == 0:
             
-            ## save try-on image only
+        #     ## save try-on image only
 
-            utils.save_image(
-                p_tryon,
-                os.path.join('./our_t_results', data['p_name'][0]),
-                nrow=int(1),
-                normalize=True,
-                value_range=(-1,1),
-            )
+        #     utils.save_image(
+        #         p_tryon,
+        #         os.path.join('./our_t_results', data['p_name'][0]),
+        #         nrow=int(1),
+        #         normalize=True,
+        #         value_range=(-1,1),
+        #     )
             
-            ## save person image, garment, flow, warped garment, and try-on image
+        #     ## save person image, garment, flow, warped garment, and try-on image
             
-            #a = real_image.float().cuda()
-            #b = clothes.cuda()
-            #flow_offset = de_offset(last_flow)
-            #flow_color = f2c(flow_offset).cuda()
-            #c= warped_cloth.cuda()
-            #d = p_tryon
-            #combine = torch.cat([a[0],b[0], flow_color, c[0], d[0]], 2).squeeze()
-            #utils.save_image(
-            #    combine,
-            #    os.path.join('./im_gar_flow_wg', data['p_name'][0]),
-            #    nrow=int(1),
-            #    normalize=True,
-            #    range=(-1,1),
-            #)
+        #     #a = real_image.float().cuda()
+        #     #b = clothes.cuda()
+        #     #flow_offset = de_offset(last_flow)
+        #     #flow_color = f2c(flow_offset).cuda()
+        #     #c= warped_cloth.cuda()
+        #     #d = p_tryon
+        #     #combine = torch.cat([a[0],b[0], flow_color, c[0], d[0]], 2).squeeze()
+        #     #utils.save_image(
+        #     #    combine,
+        #     #    os.path.join('./im_gar_flow_wg', data['p_name'][0]),
+        #     #    nrow=int(1),
+        #     #    normalize=True,
+        #     #    range=(-1,1),
+        #     #)
             
 
-        step += 1
-        if epoch_iter >= dataset_size:
-            break
+        # step += 1
+        # if epoch_iter >= dataset_size:
+        #     break
 
 
