@@ -93,11 +93,11 @@ optimizer_warp = torch.optim.Adam(params_warp, lr=0.2 * opt.lr, betas=(opt.beta1
 optimizer_gen = torch.optim.Adam(params_gen, lr=opt.lr, betas=(opt.beta1, 0.999))
 
 
-if opt.continue_train and opt.PBAFN_warp_checkpoint_continue and opt.PBAFN_gen_checkpoint_continue:
-    warp_checkpoint = torch.load(opt.PBAFN_warp_checkpoint_continue)
-    gen_checkpoint = torch.load(opt.PBAFN_gen_checkpoint_continue)
+if opt.continue_train and opt.PFAFN_warp_checkpoint_continue and opt.PFAFN_gen_checkpoint_continue:
+    warp_checkpoint = torch.load(opt.PFAFN_warp_checkpoint_continue)
+    gen_checkpoint = torch.load(opt.PFAFN_gen_checkpoint_continue)
 
-    # w_ckp = refresh(warp_checkpoint['model_state_dict'])
+    # w_ckp = refresh(warp_checkpoint['model_state_dict'])SSSSSS
     PF_warp_model.load_state_dict(warp_checkpoint['model_state_dict'])
     optimizer_warp.load_state_dict(warp_checkpoint['optimizer_state_dict'])
 
