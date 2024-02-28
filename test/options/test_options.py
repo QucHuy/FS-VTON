@@ -7,5 +7,7 @@ class TestOptions(BaseOptions):
         self.parser.add_argument('--warp_checkpoint', type=str, default='/home/sh0089/sen/PF-AFN/PF-AFN_train/checkpoints_ours_fc/PFAFN_e2e_ours/PFAFN_warp_epoch_101.pth', help='load the pretrained model from the specified location')
         self.parser.add_argument('--gen_checkpoint', type=str, default='/home/sh0089/sen/PF-AFN/PF-AFN_train/checkpoints_ours_fc/PFAFN_e2e_ours/PFAFN_gen_epoch_101.pth', help='load the pretrained model from the specified location')
         self.parser.add_argument('--phase', type=str, default='test', help='train, val, test, etc')
-
+        self.parser.add_argument('--link_cloth', type=str, default=None, help='path garment')
+        self.parser.add_argument('--link_edge', type=str, default=None, help='path edge')
+        self.parser.add_argument('--link_image', type=str, default=None, help='path image')
         self.isTrain = False
