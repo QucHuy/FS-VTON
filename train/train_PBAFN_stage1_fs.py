@@ -85,7 +85,7 @@ if opt.local_rank == 0:
     writer = SummaryWriter(path)
 
 example_ct = 0
-wandb.init(project="new-sota-model")
+wandb.init(project="PBAFN_warp")
 wandb.config = {"learning_rate": opt.lr, "epochs": opt.niter + opt.niter_decay, "batch_size": opt.batchSize, "dataset" :"VTON"}
 wandb.watch(model)
 for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
@@ -100,7 +100,6 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
 
         total_steps += 1
         epoch_iter += 1
-        save_fake = True
         example_ct += 1
         t_mask = torch.FloatTensor((data['label'].cpu().numpy()==7).astype(np.float64))
         data['label'] = data['label']*(1-t_mask)+t_mask*4
@@ -203,5 +202,5 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))        
         save_checkpoint(epoch, model, optimizer_warp, os.path.join(opt.checkpoints_dir, opt.name, 'PBAFN_warp_epoch_%03d.pth' % (epoch+1)))
 
-    if epoch > opt.niter:
+    if epoch > opt.niter:   
         model.module.update_learning_rate(optimizer_warp)
