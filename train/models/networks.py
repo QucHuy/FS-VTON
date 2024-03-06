@@ -210,7 +210,7 @@ def load_checkpoint_part_parallel(model, checkpoint_path, status):
     checkpoint = torch.load(checkpoint_path,map_location='cuda:{}'.format(opt.local_rank))["model_state_dict"]
     checkpoint_new = model.state_dict()
     if status == 0:
-        ckp = refresh(checkpoint["model_state_dict"])
+        ckp = refresh(checkpoint)
     else:
         ckp = checkpoint
     for param in checkpoint_new:
